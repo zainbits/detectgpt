@@ -15,24 +15,36 @@
 }
 
 :root {
-  --fog: #f3f7f5;
-  --paper: #ffffff;
-  --ink: #19382c;
-  --muted: #5d7165;
-  --evergreen: #24664f;
-  --mint: #ddece4;
+  --fog: #0c1511;
+  --paper: #13211b;
+  --ink: #edf6f1;
+  --muted: #9aafa4;
+  --evergreen: #78c6a4;
+  --mint: #213c30;
   --line: color-mix(in srgb, var(--mint), var(--ink) 9%);
   --subtle: color-mix(in srgb, var(--fog), var(--paper) 58%);
   --type-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --type-body: 'DM Sans Variable', system-ui, sans-serif;
   --type-utility: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-  color-scheme: light;
+  color-scheme: dark;
   font-synthesis: none;
   font-family: var(--type-body);
   color: var(--ink);
   background: var(--fog);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --fog: #f3f7f5;
+    --paper: #ffffff;
+    --ink: #19382c;
+    --muted: #5d7165;
+    --evergreen: #24664f;
+    --mint: #ddece4;
+    color-scheme: light;
+  }
 }
 
 * { box-sizing: border-box; }
