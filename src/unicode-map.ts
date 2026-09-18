@@ -1,6 +1,6 @@
 /**
- * Map of non-ASCII Unicode characters commonly inserted by ChatGPT / AI models,
- * along with their safe ASCII replacements.
+ * Common typographic Unicode characters and their plain-text replacements.
+ * These characters occur in human writing too; they are not AI watermarks.
  *
  * Each entry includes:
  *  - char: the problematic Unicode character
@@ -36,6 +36,11 @@ export const UNICODE_MAP: UnicodeEntry[] = [
   { char: '\u2013', name: 'En Dash', codePoint: 'U+2013', replacement: '-', category: 'dashes' },
   { char: '\u2012', name: 'Figure Dash', codePoint: 'U+2012', replacement: '-', category: 'dashes' },
   { char: '\u2015', name: 'Horizontal Bar', codePoint: 'U+2015', replacement: '-', category: 'dashes' },
+  { char: '\u2E3A', name: 'Two-Em Dash', codePoint: 'U+2E3A', replacement: '-', category: 'dashes' },
+  { char: '\u2E3B', name: 'Three-Em Dash', codePoint: 'U+2E3B', replacement: '-', category: 'dashes' },
+  { char: '\uFE31', name: 'Vertical Em Dash', codePoint: 'U+FE31', replacement: '-', category: 'dashes' },
+  { char: '\uFE32', name: 'Vertical En Dash', codePoint: 'U+FE32', replacement: '-', category: 'dashes' },
+  { char: '\uFE58', name: 'Small Em Dash', codePoint: 'U+FE58', replacement: '-', category: 'dashes' },
   { char: '\u2010', name: 'Hyphen', codePoint: 'U+2010', replacement: '-', category: 'dashes' },
   { char: '\u2011', name: 'Non-Breaking Hyphen', codePoint: 'U+2011', replacement: '-', category: 'dashes' },
   { char: '\u00AD', name: 'Soft Hyphen', codePoint: 'U+00AD', replacement: '', category: 'dashes' },
@@ -64,7 +69,7 @@ export const UNICODE_MAP: UnicodeEntry[] = [
 
   // ── Punctuation ───────────────────────────────────────────
   { char: '\u2026', name: 'Horizontal Ellipsis', codePoint: 'U+2026', replacement: '...', category: 'punctuation' },
-  { char: '\u2022', name: 'Bullet', codePoint: 'U+2022', replacement: '*', category: 'punctuation' },
+  { char: '\u2022', name: 'Bullet', codePoint: 'U+2022', replacement: '-', category: 'punctuation' },
   { char: '\u2023', name: 'Triangular Bullet', codePoint: 'U+2023', replacement: '>', category: 'punctuation' },
   { char: '\u2043', name: 'Hyphen Bullet', codePoint: 'U+2043', replacement: '-', category: 'punctuation' },
   { char: '\u00B7', name: 'Middle Dot', codePoint: 'U+00B7', replacement: '.', category: 'punctuation' },
@@ -100,8 +105,19 @@ export interface Detection {
   entry: UnicodeEntry
 }
 
+export interface CleanOptions {
+  replaceLongDashes?: boolean
+}
+
+const LONG_DASHES = new Set(['\u2012', '\u2013', '\u2014', '\u2015', '\u2E3A', '\u2E3B', '\uFE31', '\uFE32', '\uFE58'])
+
+/** The same rule is used by the cleaner and the character-details view. */
+export function getReplacement(entry: UnicodeEntry, options: CleanOptions = {}): string {
+  return options.replaceLongDashes && LONG_DASHES.has(entry.char) ? ',' : entry.replacement
+}
+
 /**
- * Scan text and return every non-ASCII hit along with its position.
+ * Scan for known characters, keeping UTF-16 offsets compatible with textarea selections.
  */
 export function detectNonAscii(text: string): Detection[] {
   const hits: Detection[] = []
@@ -117,18 +133,37 @@ export function detectNonAscii(text: string): Detection[] {
 /**
  * Replace every known non-ASCII character with its ASCII equivalent.
  */
-export function cleanText(text: string): string {
-  let result = ''
+export function cleanText(text: string, options: CleanOptions = {}): string {
+  const result: string[] = []
   for (let i = 0; i < text.length; i++) {
     const entry = charMap.get(text[i])
-    result += entry ? entry.replacement : text[i]
+    // Leave long dashes in place until whitespace/invisible characters are normalized.
+    result.push(entry && !(options.replaceLongDashes && LONG_DASHES.has(entry.char))
+      ? entry.replacement
+      : text[i])
   }
-  return result
+
+  const normalized = result.join('')
+  if (!options.replaceLongDashes) return normalized
+
+  // Only tidy spacing around the commas we insert, never existing commas or line breaks.
+  return normalized.replace(
+    /[ \t]*[\u2012-\u2015\u2E3A\u2E3B\uFE31\uFE32\uFE58][ \t]*/g,
+    (match: string, offset: number, source: string) => {
+      const before = source[offset - 1]
+      const after = source[offset + match.length]
+      const indent = offset === 0 || before === '\n' || before === '\r'
+        ? match.match(/^[ \t]*/)?.[0] ?? ''
+        : ''
+      const space = after && !/[\r\n,.;:!?)\]}]/.test(after) ? ' ' : ''
+      return `${indent},${space}`
+    },
+  )
 }
 
 /** Category display info */
 export const CATEGORY_INFO: Record<string, { label: string; color: string }> = {
-  quotes: { label: 'Smart Quotes', color: 'violet' },
+  quotes: { label: 'Smart quotes', color: 'violet' },
   dashes: { label: 'Dashes', color: 'blue' },
   spaces: { label: 'Spaces', color: 'teal' },
   invisible: { label: 'Invisible', color: 'red' },
