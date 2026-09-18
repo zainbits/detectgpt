@@ -12,6 +12,7 @@ const paths = {
   alert: 'M12 8v5m0 4h.01M10.3 3.8 1.8 18.5a1.7 1.7 0 0 0 1.5 2.5h17.4a1.7 1.7 0 0 0 1.5-2.5L13.7 3.8a2 2 0 0 0-3.4 0Z',
   text: 'M4 5h16M12 5v15M8 20h8',
   mark: 'M4 5h16M4 11h11M4 17h6m4 0 3 3 5-7',
+  settings: 'M4 7h6m4 0h6M10 4v6M4 17h11m4 0h1M15 14v6',
 } as const
 
 export function Icon({ name, size = 18, className, style }: {

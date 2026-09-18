@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Switch } from '@mantine/core'
+import { Popover, Switch } from '@mantine/core'
 import { cleanText, detectNonAscii } from './unicode-map'
 import { CharacterDetails } from './components/CharacterDetails'
 import { Icon } from './components/Icon'
@@ -22,6 +22,7 @@ const SWITCH_CLASSES = {
 function App() {
   const [input, setInput] = useState('')
   const [preferences, setPreferences] = useState(readPreferences)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [pasteError, setPasteError] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const outputRef = useRef<HTMLTextAreaElement>(null)
@@ -101,6 +102,31 @@ function App() {
           <span className="brand-mark"><Icon name="mark" size={23} /></span>
           <span>detect<span className="brand-suffix">gpt</span><span className="brand-period">.</span></span>
         </div>
+        <Popover opened={settingsOpen} onChange={setSettingsOpen} position="bottom-end" offset={8} width={280}>
+          <Popover.Target>
+            <button type="button" className="settings-button" aria-label="Settings" title="Settings"
+              aria-expanded={settingsOpen} onClick={() => setSettingsOpen((open) => !open)}>
+              <Icon name="settings" size={18} />
+            </button>
+          </Popover.Target>
+          <Popover.Dropdown className="settings-popover">
+            <div className="settings-heading">Settings</div>
+            <div className="settings-list" role="group" aria-label="Cleaning preferences">
+              <Switch
+                id="auto-copy" label="Auto-copy" description="Copy cleaned text"
+                aria-label="Auto-copy" checked={preferences.autoCopy} labelPosition="left"
+                size="sm" classNames={SWITCH_CLASSES} withThumbIndicator={false}
+                onChange={(event) => updatePreference('autoCopy', event.currentTarget.checked)}
+              />
+              <Switch
+                id="long-dashes" label="Long-dash replacer" description={<>Use {preferences.replaceLongDashes ? 'commas' : 'hyphens'}</>}
+                aria-label="Long-dash replacer" checked={preferences.replaceLongDashes} labelPosition="left"
+                size="sm" classNames={SWITCH_CLASSES} withThumbIndicator={false}
+                onChange={(event) => updatePreference('replaceLongDashes', event.currentTarget.checked)}
+              />
+            </div>
+          </Popover.Dropdown>
+        </Popover>
       </header>
 
       <main id="main-content">
@@ -109,21 +135,6 @@ function App() {
         </section>
 
         <section className="workspace" aria-label="Text cleaner">
-        <div className="settings-bar" role="group" aria-label="Cleaning preferences">
-          <Switch
-            id="auto-copy" label="Auto-copy" description="Copy cleaned text automatically"
-            aria-label="Auto-copy" checked={preferences.autoCopy} labelPosition="left"
-            size="md" classNames={SWITCH_CLASSES} withThumbIndicator={false}
-            onChange={(event) => updatePreference('autoCopy', event.currentTarget.checked)}
-          />
-          <Switch
-            id="long-dashes" label="Long-dash replacer" description={<>Replace with {preferences.replaceLongDashes ? 'commas' : 'hyphens'}</>}
-            aria-label="Long-dash replacer" checked={preferences.replaceLongDashes} labelPosition="left"
-            size="md" classNames={SWITCH_CLASSES} withThumbIndicator={false}
-            onChange={(event) => updatePreference('replaceLongDashes', event.currentTarget.checked)}
-          />
-        </div>
-
         <div className="editors">
           <section className="editor-pane input-pane" aria-labelledby="input-label">
             <div className="editor-toolbar">
