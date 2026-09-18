@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
   <style>
-    .tile { fill: #213c30; }
-    .mark { stroke: #78c6a4; }
+    .tile { fill: #21352b; }
+    .mark { stroke: #76a88f; }
     @media (prefers-color-scheme: light) {
       .tile { fill: #ddece4; }
       .mark { stroke: #24664f; }

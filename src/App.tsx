@@ -91,7 +91,7 @@ function App() {
     ? status.automatic ? 'Auto-copied to clipboard' : 'Copied to clipboard'
     : status.state === 'copying' ? 'Copying to clipboard…'
       : status.state === 'error' ? 'Not copied. Use Copy text to try again.'
-        : hasInput ? preferences.autoCopy ? 'Ready to copy' : 'Ready when you are' : 'Your clean text will appear here'
+        : null
 
   return (
     <div className="app-shell">
@@ -100,42 +100,28 @@ function App() {
         <div className="brand">
           <span className="brand-mark"><Icon name="mark" size={23} /></span>
           <span>detect<span className="brand-suffix">gpt</span><span className="brand-period">.</span></span>
-          <span className="brand-descriptor">The text cleaner</span>
         </div>
-        <span className="privacy-note"><Icon name="lock" size={14} /><span>Just your browser. Just your text.</span></span>
       </header>
 
       <main id="main-content">
         <section className="intro" aria-labelledby="page-title">
-          <div className="intro-copy">
-            <h1 id="page-title">Your words.<br /><span>A little cleaner.</span></h1>
-            <p className="intro-description">Fix stray punctuation and invisible characters.<br className="desktop-break" /> Paste it in. Take clean text anywhere.</p>
-          </div>
-          <div className="punctuation-proof" role="img" aria-label={`Smart quotes become straight quotes. Long dashes become ${preferences.replaceLongDashes ? 'commas' : 'hyphens'}. Bullets become hyphens.`}>
-            <div className="proof-glyphs" aria-hidden="true">
-              <div className="proof-pair"><span className="proof-before">“</span><Icon name="arrow" size={20} /><span className="proof-after">"</span></div>
-              <div className="proof-pair proof-pair--dash"><span className="proof-before">—</span><Icon name="arrow" size={20} /><span className="proof-after">{preferences.replaceLongDashes ? ',' : '-'}</span></div>
-              <div className="proof-pair"><span className="proof-before">•</span><Icon name="arrow" size={20} /><span className="proof-after">-</span></div>
-            </div>
-            <span className="proof-caption" aria-hidden="true">Same words. Fewer distractions.</span>
-          </div>
+          <h1 id="page-title">Your words.<br /><span>A little cleaner.</span></h1>
         </section>
 
-      <section className="workspace" aria-label="Text cleaner">
+        <section className="workspace" aria-label="Text cleaner">
         <div className="settings-bar" role="group" aria-label="Cleaning preferences">
           <Switch
-            id="auto-copy" label="Auto-copy" description="Clean text, straight to your clipboard"
+            id="auto-copy" label="Auto-copy" description="Copy cleaned text automatically"
             aria-label="Auto-copy" checked={preferences.autoCopy} labelPosition="left"
             size="md" classNames={SWITCH_CLASSES} withThumbIndicator={false}
             onChange={(event) => updatePreference('autoCopy', event.currentTarget.checked)}
           />
           <Switch
-            id="long-dashes" label="Long-dash replacer" description={<>Long dashes <span className="inline-arrow">→</span> {preferences.replaceLongDashes ? 'commas' : 'hyphens'}</>}
+            id="long-dashes" label="Long-dash replacer" description={<>Replace with {preferences.replaceLongDashes ? 'commas' : 'hyphens'}</>}
             aria-label="Long-dash replacer" checked={preferences.replaceLongDashes} labelPosition="left"
             size="md" classNames={SWITCH_CLASSES} withThumbIndicator={false}
             onChange={(event) => updatePreference('replaceLongDashes', event.currentTarget.checked)}
           />
-          <span className="live-label"><span className="status-dot" />Cleans as you type</span>
         </div>
 
         <div className="editors">
@@ -151,9 +137,9 @@ function App() {
             <div className="text-area-wrap">
               <textarea
                 ref={inputRef} id="text-input" className="editor-textarea input-textarea"
-                placeholder={'Paste something here.\nWe’ll take care of the little things.'}
+                placeholder="Paste text here"
                 value={input} spellCheck={false} autoCapitalize="off" autoCorrect="off"
-                aria-describedby={pasteError ? 'paste-error' : 'input-hint'}
+                aria-describedby={pasteError ? 'paste-error' : undefined}
                 onChange={(event) => updateInput(event.currentTarget.value)}
                 onPaste={(event) => {
                   // React skips onChange when an identical paste leaves the value unchanged.
@@ -175,7 +161,6 @@ function App() {
             </div>
             <div className="editor-footer">
               <span>{inputStats.words.toLocaleString()} {inputStats.words === 1 ? 'word' : 'words'}<span className="counter-divider">/</span>{inputStats.characters.toLocaleString()} <span className="character-unit">characters</span></span>
-              <span id="input-hint" className="input-hint">{hasInput ? 'Original stays untouched' : 'Plain text in, plain text out'}</span>
             </div>
           </section>
 
@@ -192,23 +177,22 @@ function App() {
             </div>
             <div className="text-area-wrap output-text-area-wrap">
               <textarea ref={outputRef} id="text-output" className={`editor-textarea output-textarea${!hasInput ? ' is-empty' : ''}`}
-                readOnly value={cleaned} spellCheck={false} aria-describedby="copy-status" />
+                readOnly value={cleaned} spellCheck={false}
+                aria-describedby={status.state !== 'idle' ? 'copy-status' : undefined} />
               {!hasInput && <div className="output-empty-state" aria-hidden="true">
-                <span className="empty-proof"><span>“</span><Icon name="arrow" size={20} /><span>"</span></span>
-                <span className="empty-state-title">A fresh start for your text.</span>
-                <span>Cleaned instantly. Nothing sent anywhere.</span>
+                <span>Cleaned text appears here</span>
               </div>}
               {hasInput && cleaned.length === 0 && <div className="output-empty-state output-removed-state">
-                <Icon name="check" size={26} /><span className="empty-state-title">Nothing left but clean space.</span>
-                <span>All detected characters were invisible and removed.</span>
+                <Icon name="check" size={22} />
+                <span>All detected characters were removed</span>
               </div>}
             </div>
             <div className="editor-footer output-footer">
-              <span id="copy-status" className={`copy-status copy-status--${status.state}`} role="status" aria-live="polite" aria-atomic="true">
-                {status.state === 'copied' && <Icon name="check" size={14} />}
-                {status.state === 'error' && <Icon name="alert" size={14} />}
-                {copyMessage}
-              </span>
+              {status.state !== 'idle' && <span id="copy-status" className={`copy-status copy-status--${status.state}`} role="status" aria-live="polite" aria-atomic="true">
+                  {status.state === 'copied' && <Icon name="check" size={14} />}
+                  {status.state === 'error' && <Icon name="alert" size={14} />}
+                  {copyMessage}
+                </span>}
               {hasInput && <span className="output-count">{outputLength.toLocaleString()} characters</span>}
             </div>
           </section>
@@ -220,18 +204,8 @@ function App() {
         </div>}
 
         <CharacterDetails detections={detections} options={preferences} hasInput={hasInput} />
-      </section>
-
-      <div className="workflow-note">
-        <span className="workflow-note-icon"><Icon name="return" size={16} /></span>
-        <p><strong>Back here? Ready to paste.</strong> Switch to this tab and your input is selected. <span className="workflow-note-extra">Turn on auto-copy to make it a one-paste routine.</span></p>
-      </div>
+        </section>
       </main>
-
-      <footer className="site-footer">
-        <span className="footer-private"><Icon name="lock" size={13} />Private by design. Your text never leaves this page.</span>
-        <span>Unusual characters aren’t proof of AI writing.</span>
-      </footer>
     </div>
   )
 }

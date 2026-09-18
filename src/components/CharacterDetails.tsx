@@ -18,11 +18,12 @@ export function CharacterDetails({ detections, options, hasInput }: {
   }, [detections])
 
   if (detections.length === 0) {
+    if (!hasInput) return null
+
     return (
       <div className="change-summary change-summary--quiet" aria-live="polite">
-        <span className="summary-icon"><Icon name={hasInput ? 'check' : 'text'} size={17} /></span>
-        <span>{hasInput ? 'Nothing to clean. Your text is ready to go.' : 'Small fixes, without rewriting your words.'}</span>
-        <span className="summary-aside">{hasInput ? 'No matching characters' : 'Quotes, dashes, spaces & more'}</span>
+        <span className="summary-icon"><Icon name="check" size={17} /></span>
+        <span>No changes needed</span>
       </div>
     )
   }
